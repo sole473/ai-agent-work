@@ -11,11 +11,13 @@ import com.musicagent.auth.service.AuthService.AuthenticatedSession;
 import com.musicagent.auth.service.SessionService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CookieValue;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -35,10 +37,9 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public UserResponse register(@RequestBody Credentials input, HttpServletResponse response) {
-        AuthenticatedSession session = authService.register(input);
-        setSessionCookie(response, session);
-        return UserResponse.from(session.user());
+    @ResponseStatus(HttpStatus.CREATED)
+    public UserResponse register(@RequestBody Credentials input) {
+        return UserResponse.from(authService.register(input));
     }
 
     @PostMapping("/login")

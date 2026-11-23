@@ -327,7 +327,7 @@ def login_page():
 
 @app.api_route("/auth/{action}", methods=["GET", "POST"])
 async def auth_proxy(action: str, request: Request):
-    if action not in {"register", "login", "logout", "me"}:
+    if action not in {"login", "logout", "me"}:
         raise HTTPException(404, "Not found")
     upstream = os.getenv("AUTH_SERVICE_URL", "http://auth:8080")
     body = await request.body() if request.method == "POST" else None

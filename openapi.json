@@ -1,0 +1,1674 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Music Agent API",
+    "version": "1.0.0",
+    "description": "Music Agent API。前端不显示注册入口；后端提供 POST /auth/register。认证使用 HttpOnly MUSIC_SESSION Cookie。"
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8081",
+      "description": "本机 Docker Compose Gateway"
+    }
+  ],
+  "tags": [
+    {
+      "name": "认证"
+    },
+    {
+      "name": "系统"
+    },
+    {
+      "name": "曲目搜索"
+    },
+    {
+      "name": "歌单"
+    },
+    {
+      "name": "音乐生成"
+    },
+    {
+      "name": "创作对话"
+    },
+    {
+      "name": "音频素材"
+    },
+    {
+      "name": "音频训练"
+    },
+    {
+      "name": "音乐项目"
+    },
+    {
+      "name": "简历"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "系统"
+        ],
+        "summary": "健康检查",
+        "operationId": "health",
+        "responses": {
+          "200": {
+            "description": "服务正常"
+          }
+        }
+      }
+    },
+    "/tracks/search": {
+      "get": {
+        "tags": [
+          "曲目搜索"
+        ],
+        "summary": "search_tracks",
+        "operationId": "get_search_tracks",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "description": "歌曲名称或关键词"
+          }
+        ]
+      }
+    },
+    "/playlists": {
+      "get": {
+        "tags": [
+          "歌单"
+        ],
+        "summary": "list_playlists",
+        "operationId": "get_list_playlists",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "歌单"
+        ],
+        "summary": "save_playlist_http",
+        "operationId": "post_save_playlist_http",
+        "responses": {
+          "201": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audio-training/datasets": {
+      "post": {
+        "tags": [
+          "音频训练"
+        ],
+        "summary": "create_audio_training_dataset",
+        "operationId": "post_create_audio_training_dataset",
+        "responses": {
+          "201": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audio-training/datasets/{dataset_id}/preprocess": {
+      "post": {
+        "tags": [
+          "音频训练"
+        ],
+        "summary": "preprocess_audio_training_dataset",
+        "operationId": "post_preprocess_audio_training_dataset",
+        "responses": {
+          "202": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "音频训练"
+        ],
+        "summary": "get_audio_training_preprocess_status",
+        "operationId": "get_get_audio_training_preprocess_status",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "dataset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/audio-training/start": {
+      "post": {
+        "tags": [
+          "音频训练"
+        ],
+        "summary": "start_audio_training",
+        "operationId": "post_start_audio_training",
+        "responses": {
+          "202": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audio-training/runs/{run_id}": {
+      "get": {
+        "tags": [
+          "音频训练"
+        ],
+        "summary": "get_audio_training_status",
+        "operationId": "get_get_audio_training_status",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/audio-training/runs/{run_id}/stop": {
+      "post": {
+        "tags": [
+          "音频训练"
+        ],
+        "summary": "stop_audio_training",
+        "operationId": "post_stop_audio_training",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audio-training/runs/{run_id}/load": {
+      "post": {
+        "tags": [
+          "音频训练"
+        ],
+        "summary": "load_audio_training_adapter",
+        "operationId": "post_load_audio_training_adapter",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "run_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audio-assets": {
+      "get": {
+        "tags": [
+          "音频素材"
+        ],
+        "summary": "list_audio_assets",
+        "operationId": "get_list_audio_assets",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "音频素材"
+        ],
+        "summary": "upload_audio_asset",
+        "operationId": "post_upload_audio_asset",
+        "responses": {
+          "201": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audio-assets/search": {
+      "post": {
+        "tags": [
+          "音频素材"
+        ],
+        "summary": "search_audio_assets",
+        "operationId": "post_search_audio_assets",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audio-assets/{asset_id}": {
+      "patch": {
+        "tags": [
+          "音频素材"
+        ],
+        "summary": "update_audio_asset",
+        "operationId": "patch_update_audio_asset",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "音频素材"
+        ],
+        "summary": "delete_audio_asset",
+        "operationId": "delete_delete_audio_asset",
+        "responses": {
+          "204": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/audio-assets/{asset_id}/audio": {
+      "get": {
+        "tags": [
+          "音频素材"
+        ],
+        "summary": "get_audio_asset",
+        "operationId": "get_get_audio_asset",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "asset_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/music-projects": {
+      "get": {
+        "tags": [
+          "音乐项目"
+        ],
+        "summary": "list_music_projects",
+        "operationId": "get_list_music_projects",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "音乐项目"
+        ],
+        "summary": "create_music_project",
+        "operationId": "post_create_music_project",
+        "responses": {
+          "201": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/music-projects/{project_id}/items/{job_id}": {
+      "put": {
+        "tags": [
+          "音乐项目"
+        ],
+        "summary": "review_music_project_item",
+        "operationId": "put_review_music_project_item",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "音乐项目"
+        ],
+        "summary": "remove_music_project_item",
+        "operationId": "delete_remove_music_project_item",
+        "responses": {
+          "204": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/music-projects/{project_id}/export": {
+      "get": {
+        "tags": [
+          "音乐项目"
+        ],
+        "summary": "export_music_project",
+        "operationId": "get_export_music_project",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "project_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/generations/config": {
+      "get": {
+        "tags": [
+          "音乐生成"
+        ],
+        "summary": "generation_config",
+        "operationId": "get_generation_config",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ]
+      }
+    },
+    "/creative-chat/config": {
+      "get": {
+        "tags": [
+          "创作对话"
+        ],
+        "summary": "creative_chat_config",
+        "operationId": "get_creative_chat_config",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ]
+      }
+    },
+    "/creative-conversations": {
+      "get": {
+        "tags": [
+          "创作对话"
+        ],
+        "summary": "list_creative_conversations",
+        "operationId": "get_list_creative_conversations",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ]
+      },
+      "post": {
+        "tags": [
+          "创作对话"
+        ],
+        "summary": "create_creative_conversation",
+        "operationId": "post_create_creative_conversation",
+        "responses": {
+          "201": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/creative-conversations/{conversation_id}": {
+      "get": {
+        "tags": [
+          "创作对话"
+        ],
+        "summary": "get_creative_conversation",
+        "operationId": "get_get_creative_conversation",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      },
+      "delete": {
+        "tags": [
+          "创作对话"
+        ],
+        "summary": "delete_creative_conversation",
+        "operationId": "delete_delete_creative_conversation",
+        "responses": {
+          "204": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "conversation_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/creative-chat": {
+      "post": {
+        "tags": [
+          "创作对话"
+        ],
+        "summary": "creative_chat",
+        "operationId": "post_creative_chat",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generations": {
+      "post": {
+        "tags": [
+          "音乐生成"
+        ],
+        "summary": "create_generation",
+        "operationId": "post_create_generation",
+        "responses": {
+          "202": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "音乐生成"
+        ],
+        "summary": "list_generations",
+        "operationId": "get_list_generations",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ]
+      }
+    },
+    "/generations/{job_id}": {
+      "get": {
+        "tags": [
+          "音乐生成"
+        ],
+        "summary": "get_generation_http",
+        "operationId": "get_get_generation_http",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/generations/{job_id}/versions": {
+      "get": {
+        "tags": [
+          "音乐生成"
+        ],
+        "summary": "get_generation_versions",
+        "operationId": "get_get_generation_versions",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/generations/{job_id}/revisions": {
+      "post": {
+        "tags": [
+          "音乐生成"
+        ],
+        "summary": "create_generation_revision",
+        "operationId": "post_create_generation_revision",
+        "responses": {
+          "202": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generations/{job_id}/tags": {
+      "patch": {
+        "tags": [
+          "音乐生成"
+        ],
+        "summary": "update_generation_tags",
+        "operationId": "patch_update_generation_tags",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generations/{job_id}/retry": {
+      "post": {
+        "tags": [
+          "音乐生成"
+        ],
+        "summary": "retry_generation",
+        "operationId": "post_retry_generation",
+        "responses": {
+          "202": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/generations/{job_id}/audio": {
+      "get": {
+        "tags": [
+          "音乐生成"
+        ],
+        "summary": "get_generation_audio",
+        "operationId": "get_get_generation_audio",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/resume/documents": {
+      "post": {
+        "tags": [
+          "简历"
+        ],
+        "summary": "upload_document",
+        "operationId": "post_upload_document",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "简历"
+        ],
+        "summary": "list_documents",
+        "operationId": "get_list_documents",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ]
+      }
+    },
+    "/resume/matches": {
+      "get": {
+        "tags": [
+          "简历"
+        ],
+        "summary": "list_matches",
+        "operationId": "get_list_matches",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ]
+      }
+    },
+    "/resume/matches/{match_id}": {
+      "delete": {
+        "tags": [
+          "简历"
+        ],
+        "summary": "delete_match",
+        "operationId": "delete_delete_match",
+        "responses": {
+          "204": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "match_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/resume/match": {
+      "post": {
+        "tags": [
+          "简历"
+        ],
+        "summary": "match_job",
+        "operationId": "post_match_job",
+        "responses": {
+          "200": {
+            "description": "成功"
+          },
+          "401": {
+            "description": "未登录或会话无效"
+          },
+          "404": {
+            "description": "资源不存在"
+          }
+        },
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "additionalProperties": true
+              }
+            }
+          }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "tags": [
+          "认证"
+        ],
+        "summary": "管理员登录",
+        "operationId": "login",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "example": "admin"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "登录成功；设置 MUSIC_SESSION Cookie",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "账号或密码错误"
+          }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "tags": [
+          "认证"
+        ],
+        "summary": "获取当前登录用户",
+        "operationId": "getCurrentUser",
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "当前用户；未登录时返回空对象"
+          }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "tags": [
+          "认证"
+        ],
+        "summary": "退出登录",
+        "operationId": "logout",
+        "security": [
+          {
+            "MusicSession": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "退出成功并清除 Cookie"
+          }
+        }
+      }
+    },
+    "/auth/register": {
+      "post": {
+        "tags": [
+          "认证"
+        ],
+        "summary": "创建账号（仅 API 提供，前端不显示注册入口）",
+        "operationId": "register",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "username",
+                  "password"
+                ],
+                "properties": {
+                  "username": {
+                    "type": "string",
+                    "minLength": 3,
+                    "maxLength": 80,
+                    "pattern": "^[a-z0-9._-]+$",
+                    "example": "new-user"
+                  },
+                  "password": {
+                    "type": "string",
+                    "format": "password",
+                    "minLength": 8,
+                    "maxLength": 72,
+                    "description": "长度按 UTF-8 编码字节计算，最多 72 字节。"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "账号创建成功",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "用户名格式错误或密码长度不符合要求"
+          },
+          "409": {
+            "description": "用户名已存在"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "MusicSession": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "MUSIC_SESSION",
+        "description": "先调用 POST /auth/login，成功后由 Apifox 保存并发送 Cookie。"
+      }
+    },
+    "schemas": {
+      "UserResponse": {
+        "type": "object",
+        "required": [
+          "id",
+          "username"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "账号 ID"
+          },
+          "username": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}

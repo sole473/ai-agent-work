@@ -14,11 +14,13 @@
 
 ## 平台账号与双后端
 
-访客可以在平台登录页注册用户名和密码。密码使用 BCrypt 哈希保存；登录会话由 Spring Boot 签发随机 Cookie，数据库只保存会话令牌的 SHA-256 摘要。部署 HTTPS 环境时，在对应环境文件中设置 `SESSION_COOKIE_SECURE=true`；仅本机 HTTP 开发环境使用 `false`。
+平台前端不显示注册入口；后端提供 `POST /auth/register`，可由 Apifox 等 API 客户端创建账号。注册用户名需为 3 至 80 位字母、数字、点、下划线或连字符；密码按 UTF-8 编码为 8 至 72 字节。登录用户名不区分大小写，密码使用 BCrypt 哈希保存；登录会话由 Spring Boot 签发随机 Cookie，数据库只保存会话令牌的 SHA-256 摘要。部署 HTTPS 环境时，在对应环境文件中设置 `SESSION_COOKIE_SECURE=true`；仅本机 HTTP 开发环境使用 `false`。
 
-Spring Boot 位于 `auth-service/`，负责注册、登录、登出和会话验证；Python FastAPI 继续负责音乐创作与生成。两者共用 Music Agent 的 MySQL 库。网页通过 Gateway 同源 `/auth/*` 路由访问 Spring Boot，登录 Cookie 使用 `HttpOnly` 和 `SameSite=Lax`。
+Spring Boot 位于 `auth-service/`，负责管理员登录、登出和会话验证；Python FastAPI 继续负责音乐创作与生成。两者共用 Music Agent 的 MySQL 库。网页通过 Gateway 同源 `/auth/*` 路由访问 Spring Boot，登录 Cookie 使用 `HttpOnly` 和 `SameSite=Lax`。
 
 `gateway-service/` 是对外 HTTP 入口，负责将 `/auth/*` 转给 Spring Boot，将工作台和音乐 API 转给 Python，并在转发前验证登录会话。验证通过后，Gateway 会覆盖 `X-Authenticated-User` 身份头；限流计数由独立 Redis 保存，登录接口按来源 IP 限流，已登录请求按用户限流。API 不映射宿主机端口，外部的 Nginx/HTTPS 反向代理应转发至 Gateway 的宿主机回环端口 `127.0.0.1:8000`。
+
+如需将网站限制为仅固定公网 IP 访问，可将 `deploy/nginx/music-agent-ip-allowlist.conf` include 到服务器上 Music Agent 网站对应的 Nginx `server {}` 配置块中。当前白名单为 `119.123.207.29`；修改服务器上的 Nginx 配置并重新加载后才会生效。如果网站前面还有 CDN 或其他代理，需要先让 Nginx 正确识别客户端真实 IP。
 
 ## RabbitMQ 生成任务死信队列
 
@@ -46,7 +48,8 @@ $server = 'ubuntu@120.53.14.254'
 $archive = Join-Path $env:TEMP 'music-agent-release.tar.gz'
 
 # -czf 创建 gzip 压缩包；排除缓存和所有实际环境密钥文件。
-tar.exe -czf $archive --exclude=__pycache__ --exclude='*.pyc' --exclude=.env --exclude=.env.local --exclude=.env.test compose.yaml gateway-service auth-service backend README.md .env.local.example .env.test.example
+# 当前仓库使用统一的 .env.example 模板，没有单独的本地/测试环境示例文件。
+tar.exe -czf $archive --exclude=__pycache__ --exclude='*.pyc' --exclude=.env --exclude=.env.local --exclude=.env.test compose.yaml gateway-service auth-service backend frontend README.md .env.example
 # 外部命令退出码为 0 表示成功，打包失败就停止。
 if ($LASTEXITCODE -ne 0) { throw '打包失败' }
 

@@ -79,11 +79,11 @@ test -f .env.test &&
 # -xzf 解开 gzip 压缩包，把新版部署文件写入当前目录。
 sudo tar -xzf "$HOME/music-agent-release.tar.gz" &&
 # 构建 API 和 worker 镜像。BUILDKIT_PROGRESS=plain 让下载进度和错误逐行输出。
-sudo env BUILDKIT_PROGRESS=plain docker compose --env-file .env.test -p music-agent build gateway auth api worker &&
+sudo env MUSIC_AGENT_ENV_FILE=.env.test BUILDKIT_PROGRESS=plain docker compose --env-file .env.test -p music-agent build gateway auth api worker &&
 # -d 让服务在后台运行，--no-build 使用刚构建的镜像。
-sudo docker compose --env-file .env.test -p music-agent up -d --no-build &&
+sudo env MUSIC_AGENT_ENV_FILE=.env.test docker compose --env-file .env.test -p music-agent up -d --no-build &&
 # 查看容器状态，确认 api 和 worker 都显示 Up。
-sudo docker compose --env-file .env.test -p music-agent ps
+sudo env MUSIC_AGENT_ENV_FILE=.env.test docker compose --env-file .env.test -p music-agent ps
 ```
 
 如果需要重新安装 Python 依赖，看到 `Looking in indexes:` 后跟着 `https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple` 就表示构建正在使用清华 PyPI 镜像。如果安装步骤显示 `CACHED`，说明直接复用了已装好依赖的镜像层。

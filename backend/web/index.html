@@ -1,0 +1,100 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Music Agent · 音乐工作台</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script defer src="/assets/studio.js"></script>
+</head>
+<body>
+  <header><strong>Music Agent</strong><div><a href="/docs">API 文档</a> <button id="logout" class="secondary" type="button">退出登录</button></div></header>
+  <main>
+    <h1>音乐工作台</h1>
+    <section>
+      <h2>找歌</h2>
+      <form id="track-search">
+        <label>歌名、歌手或专辑<input name="q" required maxlength="200" type="search"></label>
+        <button type="submit">搜索</button>
+      </form>
+      <p id="track-status" role="status"></p>
+      <ul id="track-results"></ul>
+    </section>
+    <section id="creative-assistant">
+      <div class="heading"><h2>创作助手</h2><span>由 DeepSeek 协助</span></div>
+      <div id="creative-messages" aria-live="polite">
+        <p class="chat-message assistant">告诉我你想要的场景、情绪、乐器或参考方向。我会整理成可生成的纯音乐方案。</p>
+      </div>
+      <div class="chat-options">
+        <label class="chat-toggle">模型<select id="creative-model" name="model">
+          <option value="deepseek-flash">DeepSeek Flash</option>
+          <option value="deepseek-v4-pro">DeepSeek V4 Pro</option>
+        </select></label>
+        <label class="chat-toggle"><input name="deep-think" type="checkbox" checked>DeepThink</label>
+        <label class="chat-toggle"><input name="web-search" type="checkbox" checked>联网搜索</label>
+      </div>
+      <form id="creative-chat">
+        <label class="sr-only" for="creative-message">与创作助手对话</label>
+        <textarea id="creative-message" name="message" rows="2" maxlength="1500" placeholder="例如，雨夜开车穿过城市，想要有一点电影感，但不要太悲伤"></textarea>
+        <button type="submit">发送</button>
+      </form>
+      <button class="secondary" id="use-brief" type="button" hidden>采用方案并生成纯音乐</button>
+      <p id="creative-status" role="status"></p>
+    </section>
+    <div class="workspace">
+      <section>
+        <h2>创作</h2>
+        <form id="generation">
+          <label>主题<textarea name="theme" required maxlength="500" rows="3" placeholder="雨夜回家，窗外有细雨和路灯"></textarea></label>
+          <label>曲风<input name="style" maxlength="200" placeholder="华语民谣、木吉他"></label>
+          <div class="fields">
+            <label>歌词模式<select name="mode">
+              <option value="instrumental">纯音乐</option>
+              <option value="manual">人声歌曲（ACE-Step）</option>
+            </select></label>
+            <label id="instrumental-generator-field">纯音乐生成器<select name="instrumental_generator"><option value="ace-step" selected>ACE-Step 模型</option><option value="local">本地程序合成</option></select></label>
+            <label>时长方式<select name="duration-mode"><option value="fixed">指定时长</option><option value="auto">自动（ACE-Step 按歌词决定，需启用 LM）</option></select></label>
+            <label id="duration-seconds-field">时长（秒）<input name="duration" type="number" min="10" max="120" value="30" required></label>
+          </div>
+          <fieldset id="instrument-field"><legend>选择编制</legend><div class="instrument-grid">
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="piano" checked><span>钢琴</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="guitar"><span>木吉他</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="violin"><span>小提琴</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="strings"><span>弦乐组</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="flute"><span>长笛</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="bass"><span>电贝斯</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="drums"><span>鼓组</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="organ"><span>风琴</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="harp"><span>竖琴</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="trumpet"><span>小号</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="saxophone"><span>萨克斯</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="choir"><span>合唱垫</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="guzheng"><span>古筝</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="music_box"><span>八音盒</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="synth_pad"><span>合成器</span></label>
+          </div><p class="instrument-hint">可组合多种音色，制作主奏与伴奏层次。</p>
+          </fieldset>
+          <div class="fields">
+            <label>突出乐器<select name="focus_instrument"><option value="piano">钢琴</option><option value="guitar">木吉他</option><option value="violin">小提琴</option><option value="strings">弦乐组</option><option value="flute">长笛</option><option value="bass">电贝斯</option><option value="drums">鼓组</option><option value="organ">风琴</option><option value="harp">竖琴</option><option value="trumpet">小号</option><option value="saxophone">萨克斯</option><option value="choir">合唱垫</option><option value="guzheng">古筝</option><option value="music_box">八音盒</option><option value="synth_pad">合成器</option></select></label>
+            <label>其他乐器<select name="support_level"><option value="soft">轻柔陪衬</option><option value="balanced" selected>均衡</option><option value="full">丰富合奏</option></select></label>
+          </div>
+          <label id="arrangement-model-field">编曲方式<select name="arrangement_model">
+            <option value="deepseek-flash">DeepSeek Flash 编曲</option>
+            <option value="deepseek-v4-pro">DeepSeek V4 Pro 编曲</option>
+            <option value="local">本地规则编曲</option>
+          </select></label>
+          <label id="lyrics-field" hidden>歌词<textarea name="lyrics" maxlength="3000" rows="4"></textarea></label>
+          <button type="submit">生成音乐</button>
+          <p id="submit-status" role="status"></p>
+        </form>
+      </section>
+      <section>
+        <div class="heading"><h2>生成记录</h2><button class="secondary" id="refresh" type="button">刷新</button></div>
+        <p id="history-status" role="status"></p>
+        <ul id="jobs"></ul>
+        <button class="secondary" id="more" type="button" hidden>加载更多</button>
+      </section>
+    </div>
+  </main>
+</body>
+</html>

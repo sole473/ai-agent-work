@@ -1,0 +1,20 @@
+{
+  "mcpServers": {
+    "music": {
+      "enabled": true,
+      "type": "http",
+      "url": "http://api:8000/mcp/"
+    }
+  },
+  "skills": {
+    "music-playlists": {
+      "enabled": true
+    },
+    "music-instrumental": {
+      "enabled": true
+    },
+    "music-songwriting": {
+      "enabled": true
+    }
+  }
+}

@@ -1,0 +1,15 @@
+.env
+__pycache__/
+*.pyc
+.venv/
+node_modules/
+.expo/
+.env.local
+.env.test
+.next/
+music/
+generated-audio/
+deer-flow-main/
+
+# 本地下载的 embedding 模型文件。
+models/

@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Music Agent · 音乐工作台</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script defer src="/assets/studio.js"></script>
+</head>
+<body>
+  <header><strong>Music Agent</strong><div><a href="/docs">API 文档</a> <button id="logout" class="secondary" type="button">退出登录</button></div></header>
+  <main>
+    <h1>音乐工作台</h1>
+    <section>
+      <h2>找歌</h2>
+      <form id="track-search">
+        <label>歌名、歌手或专辑<input name="q" required maxlength="200" type="search"></label>
+        <button type="submit">搜索</button>
+      </form>
+      <p id="track-status" role="status"></p>
+      <ul id="track-results"></ul>
+    </section>
+    <section id="asset-library">
+      <h2>自有素材库</h2>
+      <p>按原始素材、stem（分轨）和 sample（采样）归档；文件仅当前账号可访问。</p>
+      <form id="asset-search"><label>用文字找素材<input name="query" type="search" minlength="2" maxlength="500" placeholder="例如：温暖的木吉他，慢节奏，适合夜读" required></label><button type="submit">搜索曲库</button></form>
+      <p id="asset-search-status" role="status"></p><ul id="asset-search-results"></ul>
+      <form id="asset-upload">
+        <label>音频文件<input name="file" type="file" accept=".wav,.mp3,.flac,.aiff,.aif,.ogg" required></label>
+        <div class="fields"><label>素材类型<select name="asset_type"><option value="original">原始素材</option><option value="stem">Stem 分轨</option><option value="sample">Sample 采样</option></select></label>
+        <label>标签<input name="tags" maxlength="400" placeholder="风格、BPM、情绪、使用场景，用逗号分隔"></label>
+        <label>BPM<input name="bpm" type="number" min="30" max="300" placeholder="例如 82"></label>
+        <label>情绪<input name="mood" maxlength="120" placeholder="温暖、松弛"></label>
+        <label>使用场景<input name="use_case" maxlength="120" placeholder="夜读、短视频"></label>
+        <label>声音描述<input name="caption" maxlength="1000" placeholder="描述节奏、音色、编制等"></label>
+        <label>素材来源<input name="source" maxlength="500" placeholder="自制、来源链接或授权说明"></label>
+        <label>歌词（训练人声素材时填写）<textarea name="lyrics" maxlength="5000" rows="3"></textarea></label>
+        <label>使用授权<select name="license_status"><option value="unknown">尚未确认</option><option value="owned">本人创作/拥有</option><option value="licensed">已获许可</option><option value="public_domain">公有领域</option></select></label></div>
+        <button type="submit">上传素材</button>
+      </form>
+      <p id="asset-status" role="status"></p>
+      <ul id="asset-list"></ul>
+      <section id="training-tools">
+        <h3>ACE-Step 训练集与 LoKr 微调</h3>
+        <p>选择已确认授权且填写声音描述的完整歌曲。stem/sample 不加入整曲训练集。4 GB 显存设备可能无法完成预处理或训练。</p>
+        <label>训练轮数<input id="training-epochs" type="number" min="1" max="1000" value="100"></label>
+        <div class="actions"><button id="prepare-training" type="button">整理并载入 ACE-Step</button><button id="preprocess-training" type="button" disabled>预处理训练集</button><button id="start-training" type="button" disabled>开始 LoKr 训练</button><button id="stop-training" class="secondary" type="button" hidden>停止训练</button><button id="load-training-adapter" class="secondary" type="button" hidden>加载训练适配器</button></div>
+        <p id="training-status" role="status"></p>
+      </section>
+    </section>
+    <section id="creative-assistant">
+      <div class="heading"><h2>创作助手</h2><span>由 DeepSeek 协助</span></div>
+      <div class="conversation-controls">
+        <label class="sr-only" for="conversation-list">对话 session</label>
+        <select id="conversation-list" aria-label="选择对话 session"></select>
+        <button class="secondary" id="new-conversation" type="button">新对话</button>
+        <button class="secondary" id="delete-conversation" type="button">删除</button>
+      </div>
+      <div id="creative-messages" aria-live="polite">
+      <p class="chat-message assistant">告诉我想写一首什么样的歌。我会和你一起打磨歌词；你确认后，再把歌词送到 ACE-Step 生成歌曲。</p>
+      </div>
+      <div class="chat-options">
+        <label class="chat-toggle">模型<select id="creative-model" name="model">
+          <option value="deepseek-flash">DeepSeek Flash</option>
+          <option value="deepseek-v4-pro">DeepSeek V4 Pro</option>
+        </select></label>
+        <label class="chat-toggle"><input name="deep-think" type="checkbox" checked>DeepThink</label>
+        <label class="chat-toggle"><input name="web-search" type="checkbox" checked>联网搜索</label>
+      </div>
+      <form id="creative-chat">
+        <label class="sr-only" for="creative-message">与创作助手对话</label>
+        <textarea id="creative-message" name="message" rows="2" maxlength="1500" placeholder="例如，雨夜开车穿过城市，想要有一点电影感，但不要太悲伤"></textarea>
+        <button type="submit">发送</button>
+      </form>
+      <button class="secondary" id="use-brief" type="button" hidden>确认歌词并带入创作表单</button>
+      <button class="secondary" id="preview-brief" type="button" hidden>生成 20 秒试听</button>
+      <small id="preview-hint" hidden>试听生成后，可在创作表单调整时长，再点击“生成音乐”提交完整版本。</small>
+      <p id="creative-status" role="status"></p>
+    </section>
+    <div class="workspace">
+      <section>
+        <h2>创作</h2>
+        <form id="generation">
+          <label>主题<textarea name="theme" required maxlength="500" rows="3" placeholder="雨夜回家，窗外有细雨和路灯"></textarea></label>
+          <label>曲风<input name="style" maxlength="200" placeholder="华语民谣、木吉他"></label>
+          <label id="reference-audio-field">ACE-Step 参考音频<select name="reference_audio_asset_id"><option value="">不使用参考音频</option></select></label>
+          <div id="mix-audio-field" class="mix-picker-field" hidden>
+            <span class="mix-picker-label">混入素材 <small>可选；素材库中的文件不会自动加入生成。</small></span>
+            <div class="mix-picker-actions"><button id="open-mix-picker" class="secondary" type="button">从素材库选择</button><button id="clear-mix-assets" class="secondary" type="button" hidden>清空选择</button></div>
+            <p id="mix-selection-summary" role="status">未选择素材</p>
+            <small>选中的素材会叠加到纯音乐成品中。未设置其他参数时，每条素材以较低音量从开头混入。</small>
+          </div>
+        <div class="fields" id="mix-controls" hidden><label>混入音量<input name="mix_gain" type="number" min="0.05" max="1" step="0.05" value="0.25"></label><label>起始位置（秒）<input name="mix_start_seconds" type="number" min="0" max="120" value="0"></label></div>
+          <div class="fields">
+            <label>歌词模式<select name="mode">
+              <option value="instrumental">纯音乐</option>
+              <option value="manual">人声歌曲（ACE-Step）</option>
+            </select></label>
+            <label id="instrumental-generator-field">纯音乐生成器<select name="instrumental_generator"><option value="ace-step" selected>ACE-Step 模型</option><option value="local">本地程序合成</option></select></label>
+            <label>时长方式<select name="duration-mode"><option value="fixed">指定时长</option><option value="auto">自动（ACE-Step 按歌词决定，需启用 LM）</option></select></label>
+            <label id="duration-seconds-field">时长（秒）<input name="duration" type="number" min="10" max="120" value="30" required></label>
+          </div>
+          <fieldset id="instrument-field"><legend>选择编制</legend><div class="instrument-grid">
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="piano" checked><span>钢琴</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="guitar"><span>木吉他</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="violin"><span>小提琴</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="strings"><span>弦乐组</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="flute"><span>长笛</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="bass"><span>电贝斯</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="drums"><span>鼓组</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="organ"><span>风琴</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="harp"><span>竖琴</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="trumpet"><span>小号</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="saxophone"><span>萨克斯</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="choir"><span>合唱垫</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="guzheng"><span>古筝</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="music_box"><span>八音盒</span></label>
+            <label class="instrument-card"><input type="checkbox" name="instrument" value="synth_pad"><span>合成器</span></label>
+          </div><p class="instrument-hint">可组合多种音色，制作主奏与伴奏层次。</p>
+          </fieldset>
+          <div class="fields">
+            <label>突出乐器<select name="focus_instrument"><option value="piano">钢琴</option><option value="guitar">木吉他</option><option value="violin">小提琴</option><option value="strings">弦乐组</option><option value="flute">长笛</option><option value="bass">电贝斯</option><option value="drums">鼓组</option><option value="organ">风琴</option><option value="harp">竖琴</option><option value="trumpet">小号</option><option value="saxophone">萨克斯</option><option value="choir">合唱垫</option><option value="guzheng">古筝</option><option value="music_box">八音盒</option><option value="synth_pad">合成器</option></select></label>
+            <label>其他乐器<select name="support_level"><option value="soft">轻柔陪衬</option><option value="balanced" selected>均衡</option><option value="full">丰富合奏</option></select></label>
+          </div>
+          <label id="arrangement-model-field">编曲方式<select name="arrangement_model">
+            <option value="deepseek-flash">DeepSeek Flash 编曲</option>
+            <option value="deepseek-v4-pro">DeepSeek V4 Pro 编曲</option>
+            <option value="local">本地规则编曲</option>
+          </select></label>
+          <label id="lyrics-field" hidden>已确认歌词<textarea name="lyrics" maxlength="3000" rows="6" placeholder="先在上方对话中创作并确认歌词"></textarea></label>
+          <button type="submit">生成音乐</button>
+          <p id="submit-status" role="status"></p>
+        </form>
+      </section>
+      <section>
+        <div class="heading"><h2>生成记录</h2><button class="secondary" id="refresh" type="button">刷新</button></div>
+        <p>成功版本可填写修改意见继续生成；人声歌曲也可修改歌词。可查看所有版本试听，满意后再选择项目并确认归档。失败任务的重试会沿用原参数。</p>
+        <p id="history-status" role="status"></p>
+        <ul id="jobs"></ul>
+        <button class="secondary" id="more" type="button" hidden>加载更多</button>
+      </section>
+    </div>
+    <section id="project-review">
+      <div class="heading"><h2>项目筛选与输出</h2><button class="secondary" id="refresh-projects" type="button">刷新项目</button></div>
+      <p>满意的版本可在生成记录中确认归档到项目；也可先加入候选，再比较、筛选并下载入选作品包。</p>
+      <form id="project-create" class="fields"><label>项目名称<input name="name" required maxlength="120" placeholder="例如：短片片尾曲"></label><button type="submit">创建项目</button></form>
+      <p id="project-status" role="status"></p>
+      <div id="projects"></div>
+    </section>
+  </main>
+  <dialog id="mix-asset-dialog" aria-labelledby="mix-asset-title">
+    <div class="mix-dialog-content">
+      <div class="heading"><h2 id="mix-asset-title">从素材库选择混入素材</h2><button id="close-mix-picker" class="secondary" type="button" aria-label="关闭">关闭</button></div>
+      <p>勾选后点“应用选择”。素材仅在你明确勾选并应用后，才会混入这次纯音乐生成。</p>
+      <div class="fields mix-picker-filters">
+        <label>搜索素材<input id="mix-asset-query" type="search" placeholder="按文件名、标签、描述搜索"></label>
+        <label>素材类型<select id="mix-asset-type"><option value="">全部类型</option><option value="original">原始素材</option><option value="stem">Stem 分轨</option><option value="sample">Sample 采样</option></select></label>
+      </div>
+      <p id="mix-picker-status" role="status"></p>
+      <ul id="mix-asset-options" class="mix-asset-options"></ul>
+      <div class="mix-dialog-footer"><button id="apply-mix-selection" type="button">应用选择</button><button id="cancel-mix-selection" class="secondary" type="button">取消</button></div>
+    </div>
+  </dialog>
+</body>
+</html>

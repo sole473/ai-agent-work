@@ -1,0 +1,28 @@
+# Web 服务：FastAPI 定义接口，Uvicorn 运行应用。
+# 提供路由注册、请求解析和校验集成。
+fastapi>=0.115,<1
+# 运行 FastAPI 的 ASGI 服务。
+uvicorn>=0.34,<1
+# 数据库：SQLAlchemy 管理数据模型和事务，PyMySQL 连接 MySQL。
+# 提供 ORM 映射、查询和事务。
+sqlalchemy>=2.0,<2.1
+# 提供 MySQL 驱动，并安装 RSA 认证支持。
+pymysql[rsa]>=1.1,<2
+# 外部 HTTP 请求：调用 Navidrome 接口。
+# 向 Navidrome 和音乐生成供应商发起 HTTP 请求。
+httpx>=0.28,<1
+# MCP：向 DeerFlow 提供搜索和歌单工具。
+# 提供 MCP 服务和工具注册。
+mcp>=1.12,<2
+# 后台任务：通过 RabbitMQ 将音乐生成交给 Celery。
+# 执行由消息代理投递的后台生成任务。
+celery>=5.5,<6
+# 解析从 Nacos 读取的 YAML 配置。
+PyYAML>=6,<7
+# 生成标准 MIDI，交给 FluidSynth 使用采样音源渲染。
+pretty_midi>=0.2.10,<1
+python-multipart>=0.0.20,<1
+pypdf>=5,<7
+python-docx>=1.1,<2
+# 腾讯云 COS Python SDK，用于保存简历原文件。
+cos-python-sdk-v5>=1.9,<2

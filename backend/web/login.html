@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>登录 · Music Agent</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script defer src="/assets/login.js"></script>
+</head>
+<body>
+  <main class="auth-page">
+    <section class="auth-card">
+      <h1>Music Agent</h1>
+      <p>登录后开始创作并管理你的音乐作品。</p>
+      <div class="auth-tabs"><button id="login-tab" type="button">登录</button><button id="register-tab" class="secondary" type="button">注册</button></div>
+      <form id="auth-form">
+        <label>用户名<input name="username" minlength="3" maxlength="80" autocomplete="username" required></label>
+        <label>密码<input name="password" type="password" minlength="10" maxlength="72" autocomplete="current-password" required></label>
+        <button id="submit-auth" type="submit">登录</button>
+        <p id="auth-status" role="status"></p>
+      </form>
+    </section>
+  </main>
+</body>
+</html>

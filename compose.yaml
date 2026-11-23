@@ -1,0 +1,185 @@
+# 定义由 Compose 启动的容器服务。
+services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    volumes:
+      - qdrant:/qdrant/storage
+    restart: unless-stopped
+
+  embedding:
+    image: ghcr.io/huggingface/text-embeddings-inference:cpu-1.8.2
+    command: ["--model-id", "/model", "--max-batch-tokens", "8192", "--max-client-batch-size", "16"]
+    volumes:
+      - ./models/BAAI-bge-small-zh-v1.5:/model:ro
+    expose:
+      - "80"
+    restart: unless-stopped
+
+  gateway-redis:
+    image: redis:7-alpine
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - gateway-redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+  gateway:
+    build: ./gateway-service
+    environment:
+      AUTH_SERVICE_URL: http://auth:8080
+      MUSIC_API_URL: http://api:8000
+      REDIS_HOST: gateway-redis
+    ports:
+      - "127.0.0.1:${GATEWAY_HOST_PORT:-8000}:8080"
+    depends_on:
+      auth:
+        condition: service_started
+      api:
+        condition: service_started
+      gateway-redis:
+        condition: service_healthy
+    restart: unless-stopped
+  auth:
+    build: ./auth-service
+    environment:
+      DB_HOST: mysql
+      DB_NAME: music
+      DB_USER: music
+      DB_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in the selected environment file}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-true}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+  # 配置 HTTP API 和 MCP 容器。
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    # 应用变量文件由 README 中的 --env-file 参数选择。
+    env_file: ${MUSIC_AGENT_ENV_FILE:-.env.local}
+    # 定义 API 与 worker 共用的环境变量。
+    environment: &backend-environment
+      # 通过 RabbitMQ 投递 Celery 任务。
+      CELERY_BROKER_URL: amqp://music:music@rabbitmq:5672//
+      # 将音频目录指向挂载路径。
+      MUSIC_AUDIO_DIR: /audio
+      AUTH_SERVICE_URL: http://auth:8080
+      QDRANT_URL: http://qdrant:6333
+      EMBEDDING_URL: http://embedding:80
+      ACESTEP_API_URL: ${ACESTEP_API_URL:-http://host.docker.internal:8001}
+      ACESTEP_TRAINING_DATA_DIR: /training-data
+      ACESTEP_TRAINING_HOST_DIR: ${ACESTEP_TRAINING_HOST_DIR:-B:/music-agent/models/ACE-Step-1.5/music-agent-data}
+    # 仅在 Compose 网络内部开放 API，外部请求统一经过 Gateway。
+    expose:
+      - "8000"
+    # 挂载 API 需要读取的数据卷。
+    volumes:
+      # 让 API 从共享卷读取音频。
+      - audio:/audio
+      # 与本机 ACE-Step 共享训练数据集，供其预处理和训练 API 读取。
+      - ./models/ACE-Step-1.5/music-agent-data:/training-data
+    # 定义 API 与 worker 共用的启动依赖。
+    depends_on: &backend-dependencies
+      # 声明数据库依赖。
+      mysql:
+        # 等待 MySQL 健康检查通过。
+        condition: service_healthy
+      # 声明消息代理依赖。
+      rabbitmq:
+        # 等待 RabbitMQ 健康检查通过。
+        condition: service_healthy
+      auth:
+        condition: service_started
+      qdrant:
+        condition: service_started
+      embedding:
+        condition: service_started
+    extra_hosts: &backend-extra-hosts
+      - "host.docker.internal:host-gateway"
+  # 配置后台任务容器。
+  worker:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    # 为 worker 加载供应商密钥等环境变量。
+    env_file: ${MUSIC_AGENT_ENV_FILE:-.env.local}
+    # 复用 API 的消息代理和音频目录设置。
+    environment: *backend-environment
+    # API 和 worker 共用音频卷，worker 负责生成，API 负责提供试听。
+    command: ["celery", "-A", "app:celery", "worker", "--loglevel=INFO", "--concurrency=1"]
+    # 挂载 worker 写入音频的数据卷。
+    volumes:
+      # 让 worker 将音频写入共享卷。
+      - audio:/audio
+      # Worker 混音时也需要读取已选中的素材；训练数据目录保持共享一致。
+      - ./models/ACE-Step-1.5/music-agent-data:/training-data
+    # 复用 API 的服务启动依赖。
+    depends_on: *backend-dependencies
+    extra_hosts: *backend-extra-hosts
+  # 配置 MySQL 容器。
+  mysql:
+    # 使用 MySQL 8.4 镜像。
+    image: mysql:8.4
+    # 定义 MySQL 初始化变量。
+    environment:
+      # 初始化应用数据库。
+      MYSQL_DATABASE: music
+      # 创建供应用连接的 MySQL 用户。
+      MYSQL_USER: music
+      # 从所选环境文件注入必填的应用用户密码。
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:?Set MYSQL_PASSWORD in the selected environment file}
+      # 让镜像为 root 用户生成随机密码。
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+    # 配置 MySQL 的持久化挂载。
+    volumes:
+      # 将数据库文件保存在命名卷中。
+      - mysql:/var/lib/mysql
+    # 定义 MySQL 就绪探测。
+    healthcheck:
+      # 用应用账号连接数据库并执行轻量查询。
+      test: ["CMD-SHELL", "MYSQL_PWD=\"$$MYSQL_PASSWORD\" mysql --protocol=tcp -h 127.0.0.1 -u music music -e 'SELECT 1'"]
+      # 每 5 秒检查一次。
+      interval: 5s
+      # 单次检查最多等待 5 秒。
+      timeout: 5s
+      # 连续失败 20 次后标记为不健康。
+      retries: 20
+  # 配置 RabbitMQ 容器。
+  rabbitmq:
+    # 使用 RabbitMQ 4 镜像。
+    image: rabbitmq:4
+    # 定义 RabbitMQ 初始化变量。
+    environment:
+      # 配置 Celery 使用的 RabbitMQ 用户。
+      RABBITMQ_DEFAULT_USER: music
+      # 配置该 RabbitMQ 用户的密码。
+      RABBITMQ_DEFAULT_PASS: music
+    # 配置 RabbitMQ 的持久化挂载。
+    volumes:
+      # 将消息代理数据保存在命名卷中。
+      - rabbitmq:/var/lib/rabbitmq
+    # 定义 RabbitMQ 就绪探测。
+    healthcheck:
+      # 用诊断命令检查 RabbitMQ 是否响应。
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      # 每 5 秒检查一次。
+      interval: 5s
+      # 单次检查最多等待 5 秒。
+      timeout: 5s
+      # 连续失败 20 次后标记为不健康。
+      retries: 20
+# 声明 Compose 管理的命名卷。
+volumes:
+  # 持久化 Gateway 的 Redis 限流计数。
+  gateway-redis:
+  # 供 API 和 worker 共享生成音频。
+  audio:
+  # 持久化 MySQL 数据。
+  mysql:
+  # 持久化 RabbitMQ 数据。
+  rabbitmq:
+  qdrant:

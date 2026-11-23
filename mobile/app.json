@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "音乐工作台",
+    "slug": "music-agent-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "android": {
+      "package": "com.musicagent.studio",
+      "permissions": [
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS",
+        "android.permission.FOREGROUND_SERVICE",
+        "android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+      ]
+    },
+    "ios": {
+      "bundleIdentifier": "com.musicagent.studio",
+      "supportsTablet": true
+    },
+    "plugins": [
+      [
+        "expo-audio",
+        {
+          "enableBackgroundPlayback": true
+        }
+      ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "87b5515d-d248-4319-a824-d45ff9acaca6"
+      }
+    }
+  }
+}

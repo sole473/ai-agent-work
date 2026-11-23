@@ -301,6 +301,11 @@ app.mount("/react-assets", StaticFiles(directory=react_dir), name="react-assets"
 
 
 @app.get("/", include_in_schema=False)
+def public_homepage():
+    return FileResponse(web_dir / "public-index.html")
+
+
+@app.get("/app", include_in_schema=False)
 def workspaces():
     return FileResponse(react_dir / "index.html")
 
@@ -361,7 +366,7 @@ async def log_request(request: Request, call_next):
     # 处理请求，并在退出时统一记录日志。
     try:
         path = request.url.path
-        public_path = path in {"/health", "/login", "/favicon.ico"} or path.startswith("/assets/") or path.startswith("/auth/") or path.startswith("/mcp")
+        public_path = path in {"/", "/health", "/login", "/favicon.ico", "/robots.txt", "/sitemap.xml"} or path.startswith("/assets/") or path.startswith("/auth/") or path.startswith("/mcp")
         if not public_path:
             token = request.cookies.get("MUSIC_SESSION")
             if token:

@@ -14,7 +14,7 @@ form.addEventListener("submit", async event => {
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || "请求失败，请稍后重试。");
-    location.assign("/");
+    location.assign("/app");
   } catch (error) {
     status.textContent = error.message;
   } finally {
@@ -23,5 +23,5 @@ form.addEventListener("submit", async event => {
 });
 
 fetch("/auth/me").then(response => response.json()).then(user => {
-  if (user.id) location.assign("/");
+  if (user.id) location.assign("/app");
 }).catch(() => {});

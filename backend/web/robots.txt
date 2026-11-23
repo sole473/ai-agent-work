@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /music
+Disallow: /resume-ui
+Disallow: /legacy-music
+Disallow: /login
+Sitemap: https://ai.agent.work.xyz/sitemap.xml

@@ -64,12 +64,13 @@ public class SessionAuthenticationFilter implements GlobalFilter, Ordered {
     }
 
     private boolean isPublic(String path) {
-        return path.equals("/health") || path.equals("/login") || path.equals("/favicon.ico")
+        return path.equals("/") || path.equals("/health") || path.equals("/login") || path.equals("/favicon.ico")
+            || path.equals("/robots.txt") || path.equals("/sitemap.xml")
             || path.startsWith("/assets/") || path.startsWith("/auth/");
     }
 
     private Mono<Void> reject(ServerWebExchange exchange, String path) {
-        if (path.equals("/")) {
+        if (path.equals("/") || path.equals("/app")) {
             exchange.getResponse().setStatusCode(HttpStatus.SEE_OTHER);
             exchange.getResponse().getHeaders().setLocation(java.net.URI.create("/login"));
             return exchange.getResponse().setComplete();

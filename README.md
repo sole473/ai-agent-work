@@ -20,7 +20,9 @@ Spring Boot 位于 `auth-service/`，负责管理员登录、登出和会话验�
 
 `gateway-service/` 是对外 HTTP 入口，负责将 `/auth/*` 转给 Spring Boot，将工作台和音乐 API 转给 Python，并在转发前验证登录会话。验证通过后，Gateway 会覆盖 `X-Authenticated-User` 身份头；限流计数由独立 Redis 保存，登录接口按来源 IP 限流，已登录请求按用户限流。API 不映射宿主机端口，外部的 Nginx/HTTPS 反向代理应转发至 Gateway 的宿主机回环端口 `127.0.0.1:8000`。
 
-如需将网站限制为仅固定公网 IP 访问，可将 `deploy/nginx/music-agent-ip-allowlist.conf` include 到服务器上 Music Agent 网站对应的 Nginx `server {}` 配置块中。当前白名单为 `119.123.207.29`；修改服务器上的 Nginx 配置并重新加载后才会生效。如果网站前面还有 CDN 或其他代理，需要先让 Nginx 正确识别客户端真实 IP。
+如需限制工作台仅固定公网 IP 访问，可将 `deploy/nginx/music-agent-ip-allowlist.conf` include 到服务器上 Music Agent 网站对应的 Nginx `server {}` 配置块中。当前白名单为 `119.123.207.29`；公开介绍首页 `/`、`/robots.txt` 和 `/sitemap.xml` 对所有访客开放，工作台及其他路径仍受白名单限制。修改服务器上的 Nginx 配置并重新加载后才会生效。如果网站前面还有 CDN 或其他代理，需要先让 Nginx 正确识别客户端真实 IP。
+
+网站公开首页位于 `/`，供访客和搜索引擎了解 Music Agent；登录后的工作台入口为 `/app`。`/robots.txt` 和 `/sitemap.xml` 仅列出公开首页，工作台页面不用于搜索索引。部署后可在 Bing Webmaster Tools 与 Google Search Console 验证域名并提交 `https://ai.agent.work.xyz/sitemap.xml`。
 
 ## RabbitMQ 生成任务死信队列
 
@@ -78,13 +80,15 @@ test -f compose.yaml &&
 test -f .env.test &&
 # -xzf 解开 gzip 压缩包，把新版部署文件写入当前目录。
 sudo tar -xzf "$HOME/music-agent-release.tar.gz" &&
-# 构建 API 和 worker 镜像。BUILDKIT_PROGRESS=plain 让下载进度和错误逐行输出。
+# 构建 API 和 worker 镜像。BUILDKIT_PROGRESS=plain 让构建日志逐行输出，便于查看下载结果和错误。
 sudo env MUSIC_AGENT_ENV_FILE=.env.test BUILDKIT_PROGRESS=plain docker compose --env-file .env.test -p music-agent build gateway auth api worker &&
 # -d 让服务在后台运行，--no-build 使用刚构建的镜像。
 sudo env MUSIC_AGENT_ENV_FILE=.env.test docker compose --env-file .env.test -p music-agent up -d --no-build &&
 # 查看容器状态，确认 api 和 worker 都显示 Up。
 sudo env MUSIC_AGENT_ENV_FILE=.env.test docker compose --env-file .env.test -p music-agent ps
 ```
+
+`BUILDKIT_PROGRESS=plain` 会逐行显示 Docker 构建命令产生的日志，但不保证提供下载总量、实时速度或剩余时间。特别是 Dockerfile 中的 `apt-get update` 通常只在索引文件下载完成后打印 `Get:` 行，不会报告 ETA；无法从这些日志准确推算还要多久。构建容器使用临时文件系统，因此服务器宿主机的 `/var/lib/apt/lists` 大小不是该构建步骤的进度。
 
 如果需要重新安装 Python 依赖，看到 `Looking in indexes:` 后跟着 `https://mirrors.tuna.tsinghua.edu.cn/pypi/web/simple` 就表示构建正在使用清华 PyPI 镜像。如果安装步骤显示 `CACHED`，说明直接复用了已装好依赖的镜像层。
 
@@ -184,7 +188,7 @@ if ($LASTEXITCODE -ne 0) { throw '启动失败，请查看下面的故障排查�
 docker compose --env-file .env.local -p music-agent-local ps
 ```
 
-启动成功后，在浏览器打开 `http://127.0.0.1:8081/` 进入平台登录页，注册或登录后进入音乐工作台。API 文档位于 `http://127.0.0.1:8081/docs`。本项目的 `.env.local` 已将 Gateway 映射到 8081，以避开旧 `music-agent-api-1` 容器占用的 8000 端口。
+启动成功后，在浏览器打开 `http://127.0.0.1:8081/` 查看公开介绍页，打开 `http://127.0.0.1:8081/app` 登录并进入工作台。API 文档位于 `http://127.0.0.1:8081/docs`。本项目的 `.env.local` 已将 Gateway 映射到 8081，以避开旧 `music-agent-api-1` 容器占用的 8000 端口。
 
 如果页面打不开或容器没有运行，在同一个 PowerShell 项目目录查看启动日志：
 
@@ -245,7 +249,7 @@ Set-Location 'B:\music-agent'
 powershell -ExecutionPolicy Bypass -File .\start-local.ps1
 ```
 
-脚本会检查 `.env.local`、本地 BGE 模型、ACE-Step 安装和 Docker Desktop。启动后访问 `http://127.0.0.1:8081/`。停止 Music Agent 容器可按本文前面的 `docker compose ... down` 命令操作；停止 ACE-Step 则在它的窗口按 `Ctrl+C`。
+脚本会检查 `.env.local`、本地 BGE 模型、ACE-Step 安装和 Docker Desktop。启动后访问 `http://127.0.0.1:8081/app` 使用工作台。停止 Music Agent 容器可按本文前面的 `docker compose ... down` 命令操作；停止 ACE-Step 则在它的窗口按 `Ctrl+C`。
 
 如果 ACE-Step API 启用了 API Key，请在 Music Agent 的 `.env.local` 中设置同一个 `ACESTEP_API_KEY`，并在启动 ACE-Step 的 PowerShell 窗口中设置相同环境变量；未启用鉴权的本机 API 可留空。
 
@@ -309,7 +313,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Music Agent 启动失败；请查看本地启�
 docker compose --env-file .env.local -p music-agent-local ps
 ```
 
-Music Agent 工作台地址是 `http://127.0.0.1:8081/`。ACE-Step API 地址是 `http://127.0.0.1:8001/`；Compose 会把 `host.docker.internal` 指向宿主机。关闭 ACE-Step 时在窗口一按 `Ctrl+C`；Music Agent 的停止命令见上文“停止本地服务”。
+Music Agent 工作台地址是 `http://127.0.0.1:8081/app`。ACE-Step API 地址是 `http://127.0.0.1:8001/`；Compose 会把 `host.docker.internal` 指向宿主机。关闭 ACE-Step 时在窗口一按 `Ctrl+C`；Music Agent 的停止命令见上文“停止本地服务”。
 
 ## Android 与 iOS 原生客户端
 
